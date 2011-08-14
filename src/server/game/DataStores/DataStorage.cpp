@@ -779,7 +779,7 @@ SpellEffectEntry const* GetSpellEffectEntry(uint32 spellId, uint32 effect)
 SpellReagentsEntry const* GetSpellReagentEntry(uint32 spellId, uint8 reagent)
 {
     SpellReagentMap::const_iterator itr = sSpellReagentMap.find(spellId);
-    if(itr == sSpellReagentMap.end())
+    if (itr == sSpellReagentMap.end())
         return NULL;
 
     return itr->second.reagents[reagent];
@@ -861,7 +861,7 @@ uint32 GetVirtualMapForMapAndZone(uint32 mapid, uint32 zoneId)
 ContentLevels GetContentLevelsForMapAndZone(uint32 mapid, uint32 zoneId)
 {
     mapid = GetVirtualMapForMapAndZone(mapid, zoneId);
-    if (mapid < 2 || mapid == 648 || mapid == 654)
+    if (mapid < 2 || mapid == 648 || mapid == 654 || mapid == 638 || mapid == 655 || mapid == 656 || mapid == 661 || mapid == 659)
         return CONTENT_1_60;
 
     MapEntry const* mapEntry = sMapStore.LookupEntry(mapid);
