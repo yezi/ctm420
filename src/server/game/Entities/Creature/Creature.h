@@ -116,6 +116,7 @@ struct CreatureTemplate
     uint32  unit_flags;                                     // enum UnitFlags mask values
     uint32  dynamicflags;
     uint32  family;                                         // enum CreatureFamily values (optional)
+    uint32  trainer_id;
     uint32  trainer_type;
     uint32  trainer_spell;
     uint32  trainer_class;
@@ -400,6 +401,7 @@ struct TrainerSpellData
     TrainerSpellMap spellList;
     uint32 trainerType;                                     // trainer type based at trainer spells, can be different from creature_template value.
                                                             // req. for correct show non-prof. trainers like weaponmaster, allowed values 0 and 2.
+    uint32 trainerId;                                       // trainer id, each trainer has own id
     TrainerSpell const* Find(uint32 spell_id) const;
 };
 

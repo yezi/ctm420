@@ -30,9 +30,11 @@ enum SpellEffIndex
     EFFECT_0 = 0,
     EFFECT_1 = 1,
     EFFECT_2 = 2,
-    EFFECT_FIRST_FOUND = 254,
-    EFFECT_ALL = 255,
 };
+
+// used in script definitions
+#define EFFECT_FIRST_FOUND 254
+#define EFFECT_ALL 255
 
 // loot modes for creatures and gameobjects, bitmask!
 enum LootModes
@@ -54,6 +56,7 @@ enum Gender
 // Race value is index in ChrRaces.dbc
 enum Races
 {
+    //RACE_NONE           = 0,
     RACE_HUMAN          = 1,
     RACE_ORC            = 2,
     RACE_DWARF          = 3,
@@ -74,8 +77,9 @@ enum Races
     //RACE_FOREST_TROLL   = 18,
     //RACE_TAUNKA         = 19,
     //RACE_NORTHREND_SKELETON = 20,
-    //RACE_ICE_TROLL          = 21
-    RACE_WORGEN             = 22
+    //RACE_ICE_TROLL          = 21,
+    RACE_WORGEN             = 22,
+    //RACE_GILNEAN            = 23
 };
 
 // max+1 for player race
