@@ -52,10 +52,10 @@ enum SpellCastTargetFlags
     TARGET_FLAG_UNIT_ALLY       = 0x00000100,               // not sent, used to validate target (if ally)
     TARGET_FLAG_CORPSE_ENEMY    = 0x00000200,               // pguid
     TARGET_FLAG_UNIT_DEAD       = 0x00000400,               // not sent, used to validate target (if dead creature)
-    TARGET_FLAG_GAMEOBJECT      = 0x00000800,               // pguid, used with TARGET_GAMEOBJECT
+    TARGET_FLAG_GAMEOBJECT      = 0x00000800,               // pguid, used with TARGET_GAMEOBJECT_TARGET
     TARGET_FLAG_TRADE_ITEM      = 0x00001000,               // pguid
     TARGET_FLAG_STRING          = 0x00002000,               // string
-    TARGET_FLAG_GAMEOBJECT_ITEM = 0x00004000,               // not sent, used with TARGET_GAMEOBJECT_ITEM
+    TARGET_FLAG_GAMEOBJECT_ITEM = 0x00004000,               // not sent, used with TARGET_GAMEOBJECT_ITEM_TARGET
     TARGET_FLAG_CORPSE_ALLY     = 0x00008000,               // pguid
     TARGET_FLAG_UNIT_MINIPET    = 0x00010000,               // pguid, used to validate target (if non combat pet)
     TARGET_FLAG_GLYPH_SLOT      = 0x00020000,               // used in glyph spells
@@ -429,7 +429,7 @@ class Spell
 
         template<typename T> WorldObject* FindCorpseUsing();
 
-        bool CheckTarget(Unit* target, uint32 eff);
+        bool CheckEffectTarget(Unit const* target, uint32 eff) const;
         bool CanAutoCast(Unit* target);
         void CheckSrc() { if (!m_targets.HasSrc()) m_targets.SetSrc(*m_caster); }
         void CheckDst() { if (!m_targets.HasDst()) m_targets.SetDst(*m_caster); }
@@ -497,8 +497,6 @@ class Spell
         int32 GetPowerCost() const { return m_powerCost; }
 
         void UpdatePointers();                              // must be used at call Spell code after time delay (non triggered spell cast/update spell call/etc)
-
-        bool CheckTargetCreatureType(Unit* target) const;
 
         void CleanupTargetList();
 
@@ -614,8 +612,7 @@ class Spell
         };
         std::list<ItemTargetInfo> m_UniqueItemInfo;
 
-        void AddUnitTarget(Unit* target, uint32 effIndex);
-        void AddUnitTarget(uint64 unitGUID, uint32 effIndex);
+        void AddUnitTarget(Unit* target, uint32 effIndex, bool checkIfValid = true);
         void AddGOTarget(GameObject* target, uint32 effIndex);
         void AddGOTarget(uint64 goGUID, uint32 effIndex);
         void AddItemTarget(Item* target, uint32 effIndex);
@@ -706,7 +703,6 @@ namespace Trillium
         const Unit* const i_source;
         uint32 i_entry;
         const Position * const i_pos;
-        bool i_requireDeadTarget;
         SpellInfo const* i_spellProto;
 
         SpellNotifierCreatureAndPlayer(Unit *source, std::list<Unit*> &data, float radius, SpellNotifyPushType type,
@@ -719,13 +715,11 @@ namespace Trillium
 
         template<class T> inline void Visit(GridRefManager<T>& m)
         {
-            i_requireDeadTarget = i_spellProto ? bool(i_spellProto->AttributesEx3 & SPELL_ATTR3_REQUIRE_DEAD_TARGET) : false;
-
             for (typename GridRefManager<T>::iterator itr = m.begin(); itr != m.end(); ++itr)
             {
                 Unit* target = (Unit*)itr->getSource();
 
-                if (!i_source->canSeeOrDetect(target, true))
+                if (i_spellProto->CheckTarget(i_source, target, true) != SPELL_CAST_OK)
                     continue;
 
                 switch (i_TargetType)
@@ -733,7 +727,8 @@ namespace Trillium
                     case SPELL_TARGETS_ENEMY:
                         if (target->isTotem())
                             continue;
-                        if (!target->isAttackableByAOE(i_spellProto))
+                        // can't be checked in SpellInfo::CheckTarget - needs more research
+                        if (target->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE))
                             continue;
                         if (i_source->IsControlledByPlayer())
                         {
@@ -750,12 +745,6 @@ namespace Trillium
                         if (target->isTotem())
                             continue;
                         if (!i_source->IsFriendlyTo(target))
-                            continue;
-                        if (target->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE))
-                            continue;
-                        if (target->GetTypeId() == TYPEID_PLAYER && target->ToPlayer()->isGameMaster())
-                            continue;
-                        if (target->isAlive() == i_requireDeadTarget)
                             continue;
                         break;
                     case SPELL_TARGETS_ENTRY:
