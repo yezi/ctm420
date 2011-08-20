@@ -187,7 +187,7 @@ extern DataStorage <SpellTotemsEntry>             sSpellTotemsStore;
 extern DataStorage <SummonPropertiesEntry>        sSummonPropertiesStore;
 extern DataStorage <TalentEntry>                  sTalentStore;
 extern DataStorage <TalentTabEntry>               sTalentTabStore;
-extern DataStorage <TalentTreePrimarySpells>      sTalentTreePrimarySpells;
+extern DataStorage <TalentTreePrimarySpellsEntry>      sTalentTreePrimarySpells;
 extern DataStorage <TaxiNodesEntry>               sTaxiNodesStore;
 extern DataStorage <TaxiPathEntry>                sTaxiPathStore;
 extern TaxiMask                                  sTaxiNodesMask;
@@ -197,7 +197,6 @@ extern TaxiMask                                  sAllianceTaxiNodesMask;
 extern TaxiMask                                  sDeathKnightTaxiNodesMask;
 extern TaxiPathSetBySource                       sTaxiPathSetBySource;
 extern TaxiPathNodesByPath                       sTaxiPathNodesByPath;
-//extern DataStorage <TeamContributionPointsEntry>  sTeamContributionPointsStore; not added yet
 extern DataStorage <TotemCategoryEntry>           sTotemCategoryStore;
 extern DataStorage <VehicleEntry>                 sVehicleStore;
 extern DataStorage <VehicleSeatEntry>             sVehicleSeatStore;
