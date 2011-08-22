@@ -443,6 +443,19 @@ int32 SpellEffectInfo::CalcValue(Unit const* caster, int32 const* bp, Unit const
     int32 basePoints = bp ? *bp : BasePoints;
     int32 randomPoints = int32(DieSides);
 
+    //float randomPoints_ScalingMultiplicator = 0.00f;
+    //if (caster && spellEntry && spellEntry->SpellScalingId)
+    //{
+    //    SpellScalingEntry const* spellScaling = sSpellScalingStore.LookupEntry(spellEntry->SpellScalingId);
+    //    uint32 casterLevel = caster->getLevel();
+    //    GtSpellScalingEntry const* gtScaling = sGtSpellScalingStore.LookupEntry(casterLevel);
+    //    if (spellScaling && gtScaling)
+    //    {
+    //        basePoints+= float(spellScaling->coefMultiplier[effIndex] * gtScaling->coef); 
+    //        randomPoints_ScalingMultiplicator = spellScaling->coefRandomMultiplier[effIndex];
+    //    }
+    //}
+ 
     // base amount modification based on spell lvl vs caster lvl
     if (caster)
     {
@@ -465,7 +478,10 @@ int32 SpellEffectInfo::CalcValue(Unit const* caster, int32 const* bp, Unit const
             int32 randvalue = (randomPoints >= 1)
                 ? irand(1, randomPoints)
                 : irand(randomPoints, 1);
-
+            
+            //if (randomPoints_ScalingMultiplicator)
+            //    basePoints += irand(1, basePoints* (randomPoints_ScalingMultiplicator >= 1 ? randomPoints_ScalingMultiplicator : randomPoints_ScalingMultiplicator+1));
+ 
             basePoints += randvalue;
             break;
     }
@@ -879,7 +895,7 @@ SpellInfo::SpellInfo(SpellEntry const* spellEntry)
     ChainEntry = NULL;
 
     // SpellTotems
-    SpellTotemsEntry const* _totem  = spellEntry->GetSpellTotems();
+    SpellTotemsEntry const* _totem = spellEntry->GetSpellTotems();
 
     for (uint8 i = 0; i < 2; ++i)
         TotemCategory[i] = _totem ? _totem->TotemCategory[i] : 0;
@@ -1514,7 +1530,7 @@ SpellCastResult SpellInfo::CheckTarget(Unit const* caster, Unit const* target, b
 
     if (!(AttributesEx6 & SPELL_ATTR6_CAN_TARGET_UNTARGETABLE) && target->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE))
         return SPELL_FAILED_BAD_TARGETS;
-    
+
     //if (!(AttributesEx6 & SPELL_ATTR6_CAN_TARGET_POSSESSED_FRIENDS)
 
     if (!CheckTargetCreatureType(target))
@@ -1591,6 +1607,11 @@ SpellCastResult SpellInfo::CheckTarget(Unit const* caster, Unit const* target, b
             }
         }
     }
+
+    if (target->HasAuraType(SPELL_AURA_PREVENT_RESSURECTION))
+        if (HasEffect(SPELL_EFFECT_SELF_RESURRECT) || HasEffect(SPELL_EFFECT_RESURRECT) || HasEffect(SPELL_EFFECT_RESURRECT_NEW))
+            return SPELL_FAILED_TARGET_CANNOT_BE_RESURRECTED;
+
     return SPELL_CAST_OK;
 }
 
