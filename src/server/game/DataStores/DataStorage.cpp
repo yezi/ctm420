@@ -460,9 +460,9 @@ void LoadDataStorages(const std::string& dataPath)
     LoadData(availableDbcLocales, bad_dbc_files, sSpellStore,                  storagesPath, "Spell.dbc", &CustomSpellEntryfmt, &CustomSpellEntryIndex);
     for (uint32 i = 1; i < sSpellStore.GetNumRows(); ++i)
     {
-        SpellEntry const* spell = sSpellStore.LookupEntry(i);
-        if (spell && spell->GetCategory())
-            sSpellCategoryStore[spell->GetCategory()].insert(i);
+        SpellCategoriesEntry const* spell = sSpellCategoriesStore.LookupEntry(i);
+        if (spell && spell->Category)
+            sSpellCategoryStore[spell->Category].insert(i);
     }
 
     for (uint32 j = 0; j < sSkillLineAbilityStore.GetNumRows(); ++j)
@@ -490,7 +490,7 @@ void LoadDataStorages(const std::string& dataPath)
                 if (skillLine->learnOnGetSkill != ABILITY_LEARNED_ON_GET_RACE_OR_CLASS_SKILL)
                     continue;
 
-                sPetFamilySpellsStore[i].insert( spellInfo->Id);
+                sPetFamilySpellsStore[i].insert(spellInfo->Id);
             }
         }
     }
@@ -514,17 +514,10 @@ void LoadDataStorages(const std::string& dataPath)
     LoadData(availableDbcLocales, bad_dbc_files, sSpellLevelsStore,         storagesPath,"SpellLevels.dbc");
     LoadData(availableDbcLocales, bad_dbc_files, sSpellPowerStore,          storagesPath,"SpellPower.dbc");
     LoadData(availableDbcLocales, bad_dbc_files, sSpellReagentsStore,       storagesPath,"SpellReagents.dbc");
-
-    //for (uint32 i = 1; i < sSpellReagentsStore.GetNumRows(); ++i)
-    //{
-    //    if (SpellReagentsEntry const *spellReagent = sSpellReagentsStore.LookupEntry(i))
-    //        sSpellReagentMap[spellReagent->Id].reagents[spellEffect->EffectIndex] = spellReagent;
-    //}
     LoadData(availableDbcLocales, bad_dbc_files, sSpellScalingStore,        storagesPath,"SpellScaling.dbc");
     LoadData(availableDbcLocales, bad_dbc_files, sSpellShapeshiftStore,     storagesPath,"SpellShapeshift.dbc");
     LoadData(availableDbcLocales, bad_dbc_files, sSpellTargetRestrictionsStore, storagesPath,"SpellTargetRestrictions.dbc");
     LoadData(availableDbcLocales, bad_dbc_files, sSpellTotemsStore,         storagesPath,"SpellTotems.dbc");
-
     LoadData(availableDbcLocales, bad_dbc_files, sSpellCastTimesStore,         storagesPath, "SpellCastTimes.dbc");
     LoadData(availableDbcLocales, bad_dbc_files, sSpellDifficultyStore,        storagesPath, "SpellDifficulty.dbc", &CustomSpellDifficultyfmt, &CustomSpellDifficultyIndex);
     LoadData(availableDbcLocales, bad_dbc_files, sSpellDurationStore,          storagesPath, "SpellDuration.dbc");
@@ -631,10 +624,10 @@ void LoadDataStorages(const std::string& dataPath)
     {
         std::set<uint32> spellPaths;
         for (uint32 i = 1; i < sSpellStore.GetNumRows (); ++i)
-            if (SpellEntry const* sInfo = sSpellStore.LookupEntry (i))
+            if (SpellEffectEntry const* sInfo = sSpellEffectStore.LookupEntry(i))
                 for (int j = 0; j < MAX_SPELL_EFFECTS; ++j)
-                    if (sInfo->GetSpellEffectIdByIndex(j) == SPELL_EFFECT_SEND_TAXI)
-                        spellPaths.insert(sInfo->GetEffectMiscValue(j));
+                    if (sInfo->Effect == SPELL_EFFECT_SEND_TAXI)
+                        spellPaths.insert(sInfo->EffectMiscValue);
 
         memset(sTaxiNodesMask, 0, sizeof(sTaxiNodesMask));
         memset(sOldContinentsNodesMask, 0, sizeof(sOldContinentsNodesMask));
