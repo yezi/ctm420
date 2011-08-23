@@ -480,13 +480,17 @@ void LoadDataStorages(const std::string& dataPath)
         {
             for (uint32 i = 1; i < sCreatureFamilyStore.GetNumRows(); ++i)
             {
+                SpellLevelsEntry const* levels = sSpellLevelsStore.LookupEntry(i);
+                if (!levels)
+                    continue;
+
                 CreatureFamilyEntry const* cFamily = sCreatureFamilyStore.LookupEntry(i);
                 if (!cFamily)
                     continue;
 
                 if (skillLine->skillId != cFamily->skillLine[0] && skillLine->skillId != cFamily->skillLine[1])
                     continue;
-                if (spellInfo->GetSpellLevel())
+                if (levels->spellLevel)
                     continue;
 
                 if (skillLine->learnOnGetSkill != ABILITY_LEARNED_ON_GET_RACE_OR_CLASS_SKILL)
@@ -769,15 +773,6 @@ SpellEffectEntry const* GetSpellEffectEntry(uint32 spellId, uint32 effect)
         return NULL;
 
     return itr->second.effects[effect];
-}
-
-SpellReagentsEntry const* GetSpellReagentEntry(uint32 spellId, uint8 reagent)
-{
-    SpellReagentMap::const_iterator itr = sSpellReagentMap.find(spellId);
-    if (itr == sSpellReagentMap.end())
-        return NULL;
-
-    return itr->second.reagents[reagent];
 }
 
 uint32 GetTalentSpellCost(uint32 spellId)
