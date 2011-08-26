@@ -554,26 +554,30 @@ int32 SpellEffectInfo::CalcValue(Unit const* caster, int32 const* bp, Unit const
     int32 randomPoints = int32(DieSides);
 
     float maxPoints = 0.00f;
-    if (caster && _spellInfo && _spellInfo->SpellScalingId)
-    {
-        SpellScaling values(_spellInfo, caster->getLevel());
-        basePoints = values.min[_effIndex];
-        maxPoints = values.max[_effIndex];
-    }
- 
-    // base amount modification based on spell lvl vs caster lvl
+    float comboPointScaling = 0.00f;
     if (caster)
     {
-        int32 level = int32(caster->getLevel());
-        if (level > int32(_spellInfo->MaxLevel) && _spellInfo->MaxLevel > 0)
-            level = int32(_spellInfo->MaxLevel);
-        else if (level < int32(_spellInfo->BaseLevel))
-            level = int32(_spellInfo->BaseLevel);
-        level -= int32(_spellInfo->SpellLevel);
-        basePoints += int32(level * basePointsPerLevel);
+        SpellScaling values(_spellInfo, caster->getLevel());
+        if (values.canScale)
+        {
+            basePoints = values.min[_effIndex];
+            maxPoints = values.max[_effIndex];
+            comboPointScaling = values.pts[_effIndex];
+        }
+        // base amount modification based on spell lvl vs caster lvl
+        else
+        {
+            int32 level = int32(caster->getLevel());
+            if (level > int32(_spellInfo->MaxLevel) && _spellInfo->MaxLevel > 0)
+                level = int32(_spellInfo->MaxLevel);
+            else if (level < int32(_spellInfo->BaseLevel))
+                level = int32(_spellInfo->BaseLevel);
+            level -= int32(_spellInfo->SpellLevel);
+            basePoints += int32(level * basePointsPerLevel);
+        }
     }
 
-    if (maxPoints)
+    if (maxPoints != 0.00f)
         basePoints = irand(basePoints, maxPoints);
     else
     {
@@ -601,9 +605,18 @@ int32 SpellEffectInfo::CalcValue(Unit const* caster, int32 const* bp, Unit const
     {
         // bonus amount from combo points
         if (caster->m_movedPlayer)
+        {
             if (uint8 comboPoints = caster->m_movedPlayer->GetComboPoints())
+            {
                 if (float comboDamage = PointsPerComboPoint)
-                    value += comboDamage * comboPoints;
+                {
+                    if (comboPointScaling != 0.00f)
+                        comboDamage = comboPointScaling;
+
+                    value += int32(comboDamage * comboPoints);
+                }
+            }
+        }
 
         value = caster->ApplyEffectModifiers(_spellInfo, _effIndex, value);
 
@@ -2132,11 +2145,20 @@ int32 SpellInfo::GetMaxDuration() const
 
 uint32 SpellInfo::CalcCastTime(Unit* caster, Spell* spell) const
 {
-    // not all spells have cast time index and this is all is pasiive abilities
+    // not all spells have cast time index and this is all is passive abilities
     if (!CastTimeEntry)
         return 0;
 
     int32 castTime = CastTimeEntry->CastTime;
+
+    if (caster)
+    {
+        SpellScaling values(spell->GetSpellInfo(), spell->GetCaster()->getLevel());
+        if (values.canScale)
+        {
+            castTime = values.cast;
+        }
+    }
 
     if (caster)
         caster->ModSpellCastTime(this, castTime, spell);

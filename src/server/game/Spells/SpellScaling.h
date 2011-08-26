@@ -26,7 +26,7 @@
 
 struct SpellScaling
 {
-    uint8 playerLevel;
+    uint8 level;
     SpellInfo const* spellEntry;
     
     float avg[3];
@@ -34,24 +34,41 @@ struct SpellScaling
     float max[3];
     float pts[3];
     
-    uint32 cast;
-    
+    int32 cast;
+ 
+    bool canScale;
     SpellScaling(SpellInfo const* spellInfo, uint8 level)
     {
+        for (uint8 i = 0; i < 3; i++)
+        {
+            avg[i] = 0.f;
+            min[i] = 0.f;
+            max[i] = 0.f;
+            pts[i] = 0.f;
+        }
+        cast = 0;
+        canScale = false;
+        
+        if (!spellInfo->SpellScalingId)
+            return;
+
+        if (!spellInfo->playerClass)
+            return;
+
         float CoefBase = spellInfo->CoefBase;
         uint8 CoefBaseLevel = spellInfo->CoefLevelBase;
 
-        uint32 castTimeMin = spellInfo->castTimeMin;
-        uint32 castTimeMax = spellInfo->castTimeMax;
+        int32 castTimeMin = spellInfo->castTimeMin;
+        int32 castTimeMax = spellInfo->castTimeMax;
         uint8 castScalingMaxLevel = spellInfo->castScalingMaxLevel;
 
         int8 class_ = spellInfo->playerClass;
 
         float gtCoef = GetGtSpellScalingValue(class_, level);
 
-        gtCoef *= (std::min(playerLevel, CoefBaseLevel) + ( CoefBase * std::max(0,playerLevel-CoefBaseLevel))) / playerLevel;
+        gtCoef *= (std::min(level, CoefBaseLevel) + ( CoefBase * std::max(0, level - CoefBaseLevel))) / level;
 
-        //cast time
+        // Cast time
         cast = 0;
         if (castTimeMax>0 && level > 1)
             cast = castTimeMin + (((level - 1) * (castTimeMax-castTimeMin)) / (castScalingMaxLevel - 1));
@@ -61,14 +78,14 @@ struct SpellScaling
         if (cast > castTimeMax)
             cast = castTimeMax;
 
-        // effects
+        // Effects
         for (uint8 effIndex = 0; effIndex < 3; effIndex++)
         {
             float mult = spellInfo->Multiplier[effIndex];
             float randommult = spellInfo->RandomMultiplier[effIndex];
             float othermult = spellInfo->OtherMultiplier[effIndex];
             
-            avg[effIndex] = mult*gtCoef;
+            avg[effIndex] = mult * gtCoef;
             if (castTimeMax > 0)
                 avg[effIndex] *= cast/castTimeMax;
             
@@ -78,6 +95,6 @@ struct SpellScaling
             avg[effIndex] = std::max(ceil(mult), roundf(avg[effIndex]));
         }
         
-        cast = roundf(cast / 10) / 100;
+        canScale = true;
     }
 };
