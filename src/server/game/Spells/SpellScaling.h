@@ -26,6 +26,8 @@
 #include <cmath>
 #include <set>
 
+class SpellInfo;
+
 struct SpellScaling
 {
     uint8 level;
@@ -94,7 +96,7 @@ struct SpellScaling
             min[effIndex] = roundf(avg[effIndex]) - std::floor(avg[effIndex] * randommult / 2);
             max[effIndex] = roundf(avg[effIndex]) + std::floor(avg[effIndex] * randommult / 2);
             pts[effIndex] = roundf(othermult * gtCoef);
-            avg[effIndex] = std::max(ceil(mult), roundf(avg[effIndex]));
+            avg[effIndex] = std::max<float>(ceil(mult), roundf(avg[effIndex]));
         }
         
         canScale = true;
