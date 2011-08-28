@@ -28,6 +28,7 @@
 #include "ScriptPCH.h"
 #include "SpellAuraEffects.h"
 #include "GridNotifiers.h"
+#include "SpellInfo.h"
 
 enum HunterSpells
 {
@@ -380,7 +381,7 @@ public:
             if (!target->HasAura(spellId))
             {
                 SpellInfo const* triggeredSpellInfo = sSpellMgr->GetSpellInfo(spellId);
-                Unit* triggerCaster = triggeredSpellInfo->IsRequiringSelectedTarget() ? caster : target;
+                Unit* triggerCaster = triggeredSpellInfo->NeedsToBeTriggeredByCaster() ? caster : target;
                 triggerCaster->CastSpell(target, triggeredSpellInfo, true, 0, aurEff);
             }
         }
