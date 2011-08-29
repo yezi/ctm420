@@ -186,7 +186,6 @@ DataStorage <SpellTargetRestrictionsEntry> sSpellTargetRestrictionsStore(SpellTa
 DataStorage <SpellTotemsEntry> sSpellTotemsStore(SpellTotemsEntryfmt);
 
 SpellEffectMap sSpellEffectMap;
-SpellReagentMap sSpellReagentMap;
 
 DataStorage <SpellCastTimesEntry> sSpellCastTimesStore(SpellCastTimefmt);
 DataStorage <SpellDifficultyEntry> sSpellDifficultyStore(SpellDifficultyfmt);
@@ -985,19 +984,6 @@ PvPDifficultyEntry const* GetBattlegroundBracketById(uint32 mapid, BattlegroundB
 uint32 const* GetTalentTabPages(uint8 cls)
 {
     return sTalentTabPages[cls];
-}
-
-float GetGtSpellScalingValue(int8 class_, uint8 level)
-{
-    if (class_ < 0)
-        class_ = MAX_CLASSES - class_ + 1; //there are negative values in SpellScaling.dbc.
-    if (class_ == 0)
-        class_ = 12; //use general scaling.
-    
-    //They really wants that players reach level 100... in the 5th expansion.
-    GtSpellScalingEntry const* spellscaling = sGtSpellScalingStore.LookupEntry((class_-1)*100 + level);
-    assert(spellscaling);
-    return spellscaling->coef;
 }
 
 // script support functions
