@@ -813,6 +813,7 @@ Player::Player (WorldSession *session): Unit(), m_achievementMgr(this), m_reputa
     for (uint8 i = 0; i < MAX_COMBAT_RATING; i++)
         m_baseRatingValue[i] = 0;
 
+    m_spellPowerFromIntellect = 0;
     m_baseSpellPower = 0;
     m_baseFeralAP = 0;
     m_baseManaRegen = 0;
@@ -1089,18 +1090,6 @@ bool Player::Create(uint32 guidlow, CharacterCreateInfo* createInfo)
     {
         UpdateMaxPower(POWER_MANA);                         // Update max Mana (for add bonus from intellect)
         SetPower(POWER_MANA, GetMaxPower(POWER_MANA));
-    }
-
-    if (getPowerType() != POWER_MANA)                        // hide additional mana bar if we have no mana
-    {
-        SetPower(POWER_MANA, 0);
-        SetMaxPower(POWER_MANA, 0);
-    }
-
-    if (getPowerType() == POWER_HEALTH)
-    {
-        UpdateMaxPower(POWER_HEALTH);
-        SetPower(POWER_HEALTH, GetMaxPower(POWER_HEALTH));
     }
 
     // original spells
@@ -2451,8 +2440,8 @@ void Player::RemoveFromWorld()
 
 void Player::RegenerateAll()
 {
-    //if (m_regenTimer <= 500)
-    //    return;
+    if (m_regenTimer <= 500)
+        return;
 
     m_regenTimerCount += m_regenTimer;
 
