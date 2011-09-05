@@ -1859,9 +1859,9 @@ void Player::BuildEnumData(QueryResult result, WorldPacket* data)
 
     Field *fields = result->Fetch();
 
+    uint32 guid = fields[0].GetUInt32();
     uint8 playerRace = fields[2].GetUInt8();
     uint8 playerClass = fields[3].GetUInt8();
-    uint32 guid = fields[0].GetUInt32();
     uint32 playerBytes = fields[5].GetUInt32();
     uint32 playerFlags = fields[14].GetUInt32();
     uint32 atLoginFlags = fields[15].GetUInt32();
@@ -1892,7 +1892,7 @@ void Player::BuildEnumData(QueryResult result, WorldPacket* data)
     if (uint8(guid >> 8) != 0)
         *data << uint8(guid >> 8);
 
-    *data << uint8(playerRace);                                // Race
+    *data << uint8(playerRace);                           // Race
 
     if (uint8(guid >> 24) != 0)
         *data << uint8(guid >> 24);
@@ -1915,7 +1915,7 @@ void Player::BuildEnumData(QueryResult result, WorldPacket* data)
     }
     else
         charFlags |= CHARACTER_FLAG_DECLINED;
-    *data << uint32(charFlags);                          // character flags
+    *data << uint32(charFlags);                           // character flags
 
     *data << uint32(petFamily);                           // Pet Family
     *data << uint8(playerBytes >> 16);                    // Hair style
@@ -2300,18 +2300,17 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
             if (!GetSession()->PlayerLogout())
             {
                 WorldPacket data(SMSG_NEW_WORLD, (3 * 4) + 4 + 4);
+
                 if (m_transport)
-                {
                     data << m_movementInfo.t_pos.PositionXYZStream();
-                    data << uint32(mapid);
-                    data << m_movementInfo.t_pos.GetOrientation();
-                }
                 else
-                {
                     data << m_teleport_dest.PositionXYZStream();
-                    data << uint32(mapid);
+
+                data << uint32(mapid);
+                if (m_transport)
+                    data << m_movementInfo.t_pos.GetOrientation();
+                else
                     data << m_teleport_dest.GetOrientation();
-                }
 
                 GetSession()->SendPacket(&data);
                 SendSavedInstances();
@@ -8814,7 +8813,7 @@ void Player::SendLoot(uint64 guid, LootType loot_type)
     // need know merged fishing/corpse loot type for achievements
     loot->loot_type = loot_type;
 
-    WorldPacket data(SMSG_LOOT_RESPONSE, (9+50));           // we guess size
+    WorldPacket data(SMSG_LOOT_RESPONSE, 9 + 50 + 2);           // we guess size
 
     data << uint64(guid);
     data << uint8(loot_type);
@@ -8838,7 +8837,7 @@ void Player::SendNotifyLootMoneyRemoved()
 
 void Player::SendNotifyLootItemRemoved(uint8 lootSlot)
 {
-    WorldPacket data(SMSG_LOOT_REMOVED, 1);
+    WorldPacket data(SMSG_LOOT_REMOVED, 1 + 2);
     data << uint8(lootSlot);
     GetSession()->SendPacket(&data);
 }

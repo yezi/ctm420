@@ -1205,6 +1205,32 @@ void Aura::HandleAuraSpecificMods(AuraApplication const* aurApp, Unit* caster, b
                         break;
                 }
                 break;
+            case SPELLFAMILY_HUNTER:
+                if (!caster)
+                    break;
+    				
+                switch(GetId())
+                {
+                    case 1978: // Improved Serpent Sting
+                    {
+                        if (AuraEffect const * aurEff = caster->GetDummyAuraEffect(SPELLFAMILY_HUNTER, 536, 0))
+                        {
+                            int32 basepoints0 = aurEff->GetAmount() * GetEffect(0)->GetTotalTicks() * caster->SpellDamageBonus(target, GetSpellInfo(), GetEffect(0)->GetAmount(), DOT) / 100;
+                            caster->CastCustomSpell(target, 83077, &basepoints0, NULL, NULL, true, NULL, GetEffect(0));
+                        }					
+                        break;
+                    }
+                    case 82925: // Master Marksman
+                    {    				
+                        if (target->GetTypeId() == TYPEID_PLAYER && GetStackAmount() == 5)
+                        {
+                            target->CastSpell(target, 82926, true);
+                            target->RemoveAura(82925);
+                        }
+                        break;
+                    }				
+                }                    
+                break; 				
             case SPELLFAMILY_PRIEST:
                 if (!caster)
                     break;
@@ -1212,7 +1238,7 @@ void Aura::HandleAuraSpecificMods(AuraApplication const* aurApp, Unit* caster, b
                 if (GetSpellInfo()->SpellFamilyFlags[0] & 0x02000000 && GetEffect(0))
                 {
                     // Improved Devouring Plague
-                    if (AuraEffect const* aurEff = caster->GetDummyAuraEffect(SPELLFAMILY_PRIEST, 3790, 1))
+                    if (AuraEffect const* aurEff = caster->GetDummyAuraEffect(SPELLFAMILY_PRIEST, 3790, 0))
                     {
                         int32 basepoints0 = aurEff->GetAmount() * GetEffect(0)->GetTotalTicks() * caster->SpellDamageBonus(target, GetSpellInfo(), GetEffect(0)->GetAmount(), DOT) / 100;
                         int32 heal = int32(CalculatePctN(basepoints0, 15));
@@ -1329,6 +1355,34 @@ void Aura::HandleAuraSpecificMods(AuraApplication const* aurApp, Unit* caster, b
                             break;
                         target->CastSpell(target, 32612, true, NULL, GetEffect(1));
                         break;
+                    case 118: // Improved Polymorph
+                    {						
+                        if (removeMode == AURA_REMOVE_BY_EXPIRE)
+                            break;						
+                        if (removeMode == AURA_REMOVE_BY_CANCEL)
+                            break;
+                        if (caster->HasAura(11210) && !target->HasAura(87515))
+                        {
+                            target->CastSpell(target, 83046, true);
+                            caster->AddAura(87515, target); // Immune Marker
+                        }
+                        else if (caster->HasAura(12592) && !target->HasAura(87515))						
+                        {
+                            target->CastSpell(target, 83047, true);
+                            caster->AddAura(87515, target); // Immune Marker
+                        }
+                        break;						
+                    }
+                    case 1463: // Incanter's Absorption
+                    {						
+                        if (removeMode == AURA_REMOVE_BY_EXPIRE)
+                            break;						
+                        if (removeMode == AURA_REMOVE_BY_CANCEL)
+                            break;						
+                        if (caster->HasAura(44394) || caster->HasAura(44395))						
+                            caster->CastSpell(caster, 86261, true);
+                        break;						
+                    }						
                     case 74396: // Fingers of Frost
                         // Remove the IGNORE_AURASTATE aura
                         target->RemoveAurasDueToSpell(44544);
