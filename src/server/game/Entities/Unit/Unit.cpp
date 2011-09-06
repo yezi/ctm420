@@ -5672,29 +5672,6 @@ bool Unit::HandleDummyAuraProc(Unit* victim, uint32 damage, AuraEffect* triggere
                 }
                 break;
             }
-
-            // Hot Streak
-            if (dummySpell->SpellIconID == 2999)
-            {
-                if (effIndex != 0)
-                    return false;
-                AuraEffect* counter = triggeredByAura->GetBase()->GetEffect(EFFECT_1);
-                if (!counter)
-                    return true;
-
-                // Count spell criticals in a row in second aura
-                if (procEx & PROC_EX_CRITICAL_HIT)
-                {
-                    counter->SetAmount(counter->GetAmount() * 2);
-                    if (counter->GetAmount() < 100) // not enough
-                        return true;
-                    // Crititcal counted -> roll chance
-                    if (roll_chance_i(triggerAmount))
-                        CastSpell(this, 48108, true, castItem, triggeredByAura);
-                }
-                counter->SetAmount(25);
-                return true;
-            }
             // Burnout
             if (dummySpell->SpellIconID == 2998)
             {
@@ -5740,16 +5717,13 @@ bool Unit::HandleDummyAuraProc(Unit* victim, uint32 damage, AuraEffect* triggere
                 case 11119:
                 case 11120:
                 case 12846:
-                case 12847:
-                case 12848:
+
                 {
                     switch (dummySpell->Id)
                     {
-                        case 11119: basepoints0 = int32(0.08f * damage); break;
-                        case 11120: basepoints0 = int32(0.16f * damage); break;
-                        case 12846: basepoints0 = int32(0.24f * damage); break;
-                        case 12847: basepoints0 = int32(0.32f * damage); break;
-                        case 12848: basepoints0 = int32(0.40f * damage); break;
+                        case 11119: basepoints0 = int32(0.13f * damage); break;
+                        case 11120: basepoints0 = int32(0.26f * damage); break;
+                        case 12846: basepoints0 = int32(0.4f * damage); break;
                         default:
                             sLog->outError("Unit::HandleDummyAuraProc: non handled spell id: %u (IG)", dummySpell->Id);
                             return false;
@@ -5762,6 +5736,37 @@ bool Unit::HandleDummyAuraProc(Unit* victim, uint32 damage, AuraEffect* triggere
                     basepoints0 += victim->GetRemainingPeriodicAmount(GetGUID(), triggered_spell_id, SPELL_AURA_PERIODIC_DAMAGE);
                     break;
                 }
+                // Hot Streak				
+                case 44445: 
+                {
+                    target = this;				
+                    triggered_spell_id = 48108;
+                    break;				
+                }
+                // Improved Hot Streak
+                case 44446:
+                case 44448:
+                {
+                    if (effIndex != 0)
+                        return false;
+
+                    AuraEffect* counter = triggeredByAura->GetBase()->GetEffect(EFFECT_1);
+                    if (!counter)
+                        return true;
+
+                    // Count spell criticals in a row in second aura
+                    if (procEx & PROC_EX_CRITICAL_HIT)
+                    {
+                        counter->SetAmount(counter->GetAmount() * 2);
+                        if (counter->GetAmount() < 100) // not enough
+                            return true;
+                        // Crititcal counted -> roll chance
+                        if (roll_chance_i(triggerAmount))
+                            CastSpell(this, 48108, true, castItem, triggeredByAura);
+                    }
+                    counter->SetAmount(25);
+                    return true;
+                }				
                 // Glyph of Ice Block
                 case 56372:
                 {
@@ -6228,7 +6233,18 @@ bool Unit::HandleDummyAuraProc(Unit* victim, uint32 damage, AuraEffect* triggere
         case SPELLFAMILY_DRUID:
         {
             switch(dummySpell->Id)
-            {
+            {		
+                // Nature's Ward
+                case 33881:			
+                case 33882:
+                {
+                    if (HealthAbovePct(50))
+                        return false;
+
+                    CastSpell(this, 45281, true);
+                    CastSpell(this, 774, true);
+                    break;
+                }			
                 // Glyph of Innervate
                 case 54832:
                 {
@@ -6583,6 +6599,20 @@ bool Unit::HandleDummyAuraProc(Unit* victim, uint32 damage, AuraEffect* triggere
                     }
                     break;
                 }
+                // Sic 'Em!
+                case 83340:
+                {
+                    triggered_spell_id = 83359;
+                    target = this;				
+                    break;
+                }
+                // Sic 'Em!
+                case 83356:
+                {
+                    triggered_spell_id = 89388;
+                    target = this;				
+                    break;
+                }				
                 case 3579: // Lock and Load
                 {
                     // Proc only from periodic (from trap activation proc another aura of this spell)
@@ -6640,7 +6670,7 @@ bool Unit::HandleDummyAuraProc(Unit* victim, uint32 damage, AuraEffect* triggere
                         if (beaconTarget->IsWithinLOSInMap(victim))
                         {
                             basepoints0 = damage;
-                            victim->CastCustomSpell(beaconTarget, 53654, &basepoints0, NULL, NULL, true);
+                            victim->CastCustomSpell(beaconTarget, 53652, &basepoints0, NULL, NULL, true);
                             return true;
                         }
                     }
@@ -7047,6 +7077,25 @@ bool Unit::HandleDummyAuraProc(Unit* victim, uint32 damage, AuraEffect* triggere
                     triggered_spell_id = 28850;
                     break;
                 }
+                // Telluric Currents
+                case 82984:
+                case 82988:
+                {
+                    basepoints0 = triggerAmount * damage / 100;				
+                    target = this;				
+                    triggered_spell_id = 82987;					
+                    break;					
+                }			
+                // Tidal Waves
+                case 51562:
+                case 51563:
+                case 51564:
+                {
+                    target = this;
+                    triggered_spell_id = 53390;
+                    break;
+                }
+			
                 // Windfury Weapon (Passive) 1-5 Ranks
                 case 33757:
                 {
@@ -8190,11 +8239,11 @@ bool Unit::HandleProcTriggerSpell(Unit* victim, uint32 damage, AuraEffect* trigg
                     {
                         float stat = 0.0f;
                         // strength
-                        if (GetStat(STAT_STRENGTH) > stat) { trigger_spell_id = 60229;stat = GetStat(STAT_STRENGTH); }
+                        if (GetStat(STAT_STRENGTH) > stat) { trigger_spell_id = 60229; stat = GetStat(STAT_STRENGTH); }
                         // agility
-                        if (GetStat(STAT_AGILITY)  > stat) { trigger_spell_id = 60233;stat = GetStat(STAT_AGILITY);  }
+                        if (GetStat(STAT_AGILITY)  > stat) { trigger_spell_id = 60233; stat = GetStat(STAT_AGILITY);  }
                         // intellect
-                        if (GetStat(STAT_INTELLECT)> stat) { trigger_spell_id = 60234;stat = GetStat(STAT_INTELLECT);}
+                        if (GetStat(STAT_INTELLECT)> stat) { trigger_spell_id = 60234; stat = GetStat(STAT_INTELLECT);}
                         // spirit
                         if (GetStat(STAT_SPIRIT)   > stat) { trigger_spell_id = 60235;                               }
                         break;
@@ -8253,7 +8302,21 @@ bool Unit::HandleProcTriggerSpell(Unit* victim, uint32 damage, AuraEffect* trigg
                             return false;
                     }
                 }
-                break;
+                switch (auraSpellInfo->Id)
+                {				
+                    // Reactive Barrier
+                    case 86303:
+                    case 86304:
+                    {
+                        if (GetTypeId() == TYPEID_PLAYER && ToPlayer()->HasSpellCooldown(11426))
+                            return false;
+		
+                        CastSpell(this, 86347, true);
+                        CastSpell(this, 11426, true);	
+                        break;						
+                    }
+                }
+                break;				
             case SPELLFAMILY_WARRIOR:
                 if (auraSpellInfo->Id == 50421)             // Scent of Blood
                 {
@@ -10542,6 +10605,7 @@ uint32 Unit::SpellDamageBonus(Unit* victim, SpellInfo const* spellProto, uint32 
                         DoneTotalMod *= 2.0f;
                 }
             }
+
             // Torment the weak
             if (spellProto->SpellFamilyFlags[0] & 0x20600021 || spellProto->SpellFamilyFlags[1] & 0x9000)
                 if (victim->HasAuraWithMechanic((1<<MECHANIC_SNARE)|(1<<MECHANIC_SLOW_ATTACK)))
